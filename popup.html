@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+    <title>Toggle Extension</title>
+    <style>
+        body {
+            width: 200px;
+        }
+        #toggleButton {
+            display: none;
+        }
+        label {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: red;
+            color: white;
+            cursor: pointer;
+        }
+        #toggleButton:checked + label {
+            background-color: green;
+        }
+    </style>
+</head>
+<body>
+    <input type="checkbox" id="toggleButton">
+    <label for="toggleButton">Toggle</label>
+    <span id="statusText">Extension is off</span> <!-- The new element -->
+
+    <script src="popup.js"></script>
+</body>
+</html>
