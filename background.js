@@ -13,7 +13,7 @@ chrome.tabs.onActivated.addListener(function(activeInfo) {
     currentlyActiveTabId = activeInfo.tabId;
     console.log("Newly activated tab ID:", currentlyActiveTabId);
 
-    // Introduce a delay to potentially mitigate race conditions
+    // This timeout solves the "Tab is being resized" error.
     setTimeout(() => {
         // If extension is enabled and there's a previously recorded tab to close
         if (isExtensionEnabled && lastActiveTabId !== null && lastActiveTabId !== currentlyActiveTabId) {
