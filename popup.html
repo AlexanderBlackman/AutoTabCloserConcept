@@ -25,7 +25,14 @@
     <input type="checkbox" id="toggleButton">
     <label for="toggleButton">Toggle</label>
     <span id="statusText">Extension is off</span> <!-- The new element -->
-
+    <div>
+        <button id="whitelistSite">Whitelist Site</button>
+        <button id="whitelistPage">Whitelist Page</button>
+        <button id="allowed">Allowed</button>
+    </div>
+    <div id="whitelistedUrls" style="display:none;">
+        <!-- List of whitelisted URLs/pages will be displayed here -->
+    </div>
     <script src="popup.js"></script>
 </body>
 </html>

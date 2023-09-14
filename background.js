@@ -1,6 +1,13 @@
 let isExtensionEnabled = false;
 let lastActiveTabId = null;
-let currentlyActiveTabId = null;
+let whitelist = [];
+
+// Retrieve the whitelist from storage on startup
+chrome.storage.sync.get('whitelist', function(data) {
+    whitelist = data.whitelist || [];
+    console.log('Retrieved whitelist:', whitelist);
+
+});
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if (message.hasOwnProperty('extensionEnabled')) {
@@ -10,24 +17,43 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 });
 
 chrome.tabs.onActivated.addListener(function(activeInfo) {
-    currentlyActiveTabId = activeInfo.tabId;
-    console.log("Newly activated tab ID:", currentlyActiveTabId);
+    const previouslyActiveTabId = lastActiveTabId;
+    lastActiveTabId = activeInfo.tabId;  // First, update the last active tab to the currently active one.
+    console.log("Newly activated tab ID:", lastActiveTabId);
 
-    // Introduce a delay to potentially mitigate race conditions
-    setTimeout(() => {
-        // If extension is enabled and there's a previously recorded tab to close
-        if (isExtensionEnabled && lastActiveTabId !== null && lastActiveTabId !== currentlyActiveTabId) {
-            console.log("Attempting to close tab:", lastActiveTabId);
-            chrome.tabs.remove(lastActiveTabId, function() {
+    if (!isExtensionEnabled || previouslyActiveTabId === null) {
+        return;  // Exit if extension is disabled or if there's no previously recorded tab.
+    }
+
+    // Check if the old tab is on the whitelist
+    chrome.tabs.get(previouslyActiveTabId, function(tab) {
+        if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError.message);
+            return;
+        }
+
+        const tabUrl = tab.url;
+        const tabDomain = new URL(tabUrl).hostname;
+
+            // Debug logs:
+    console.log('Checking tab with URL:', tabUrl);
+    console.log('Derived domain:', tabDomain);
+
+        // Check if the tab's URL or domain is on the whitelist
+        if (whitelist.includes(`page:${tabUrl}`) || whitelist.includes(`site:${tabDomain}`)) {
+            console.log(`Tab with URL ${tabUrl} is whitelisted. Not closing.`);
+            return;
+        }
+
+        setTimeout(() => {
+            console.log("Attempting to close tab:", previouslyActiveTabId);
+            chrome.tabs.remove(previouslyActiveTabId, function() {
                 if (chrome.runtime.lastError) {
                     console.error(chrome.runtime.lastError.message);
                 } else {
-                    console.log("Successfully closed tab:", lastActiveTabId);
+                    console.log("Successfully closed tab:", previouslyActiveTabId);
                 }
             });
-        }
-
-        // After potentially closing the old tab, update the lastActiveTabId
-        lastActiveTabId = currentlyActiveTabId;
-    }, 500);
+        }, 500);
+    });
 });
